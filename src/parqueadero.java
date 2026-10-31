@@ -5,7 +5,7 @@ import java.time.format.DateTimeParseException;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 
-public class Parqueadero {
+class Parqueadero {
 
     // 1. CONSTANTES DEL SISTEMA
     static final int CAPACIDAD_TOTAL = 10;
@@ -196,6 +196,90 @@ public class Parqueadero {
         }
 
         liquidacion(celda, salida);
+    }
+    // 8. LIQUIDAR LA ESTADIA Y MOSTRAR LA FACTURA
+    static void liquidacion(int celda, LocalDateTime salida) {
+
+        String tipo = tipoVehiculo[celda];
+        LocalDateTime ingreso = fechaIngreso[celda];
+
+        long dias = ChronoUnit.DAYS.between(ingreso, salida);
+
+        LocalDateTime cursor = ingreso.plusDays(dias);
+
+        long minutosRestantes = Duration.between(cursor, salida).toMinutes();
+
+        long horas = (minutosRestantes + 59) / 60;
+
+        if (horas >= UMBRAL_HORAS_DIA) {
+            dias++;
+            horas = 0;
+        }
+
+        int tarifaHora;
+        int tarifaDia;
+
+        if (tipo.equals("Carro")) {
+            tarifaHora = TARIFA_HORA_CARRO;
+            tarifaDia = TARIFA_DIA_CARRO;
+        } else {
+            tarifaHora = TARIFA_HORA_MOTO;
+            tarifaDia = TARIFA_DIA_MOTO;
+        }
+
+        long valorDias = dias * tarifaDia;
+        long valorHoras = horas * tarifaHora;
+        long total = valorDias + valorHoras;
+
+        System.out.println("\n===== FACTURA =====");
+        System.out.println("Celda: " + (celda + 1));
+        System.out.println("Vehiculo: " + tipo);
+        System.out.println("Ingreso: " + ingreso.format(FORMATO_FECHA_HORA));
+        System.out.println("Salida: " + salida.format(FORMATO_FECHA_HORA));
+        System.out.println("Dias cobrados: " + dias);
+        System.out.println("Horas cobradas: " + horas);
+        System.out.println("Valor por dias: $" + valorDias);
+        System.out.println("Valor por horas: $" + valorHoras);
+        System.out.println("TOTAL A PAGAR: $" + total);
+
+        if (tipo.equals("Carro")) {
+            recaudoCarros += total;
+        } else {
+            recaudoMotos += total;
+        }
+
+        // Liberar la celda despues del cobro.
+        tipoVehiculo[celda] = null;
+        fechaIngreso[celda] = null;
+
+        System.out.println("Celda liberada correctamente.");
+    }
+
+    // 9. REPORTE DE OCUPACION
+    static void reporteOcupacion() {
+
+        int ocupadas = 0;
+
+        for (int i = 0; i < CAPACIDAD_TOTAL; i++) {
+            if (tipoVehiculo[i] != null) {
+                ocupadas++;
+            }
+        }
+
+        int libres = CAPACIDAD_TOTAL - ocupadas;
+
+        System.out.println("\n===== REPORTE DE OCUPACION =====");
+        System.out.println("Celdas ocupadas: " + ocupadas);
+        System.out.println("Celdas libres: " + libres);
+    }
+
+    // 10. REPORTE FINANCIERO
+    static void reporteFinanciero() {
+
+        System.out.println("\n===== REPORTE FINANCIERO =====");
+        System.out.println("Recaudo de carros: $" + recaudoCarros);
+        System.out.println("Recaudo de motos: $" + recaudoMotos);
+        System.out.println("Recaudo total: $" + (recaudoCarros + recaudoMotos));
     }
 }
 
